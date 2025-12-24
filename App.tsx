@@ -1,12 +1,10 @@
-import React, { useState, useEffect, lazy, Suspense } from 'react';
+import React, { useState, lazy, Suspense } from 'react';
 
-import ErrorDisplay from './components/ErrorDisplay';
 import Hero from './components/Hero';
 import Layout from './components/Layout';
 import OfflineIndicator from './components/OfflineIndicator';
 import { usePageTracking } from './hooks/useAnalytics';
 import { UserAnswers } from './types';
-import { isEnvironmentValid } from './utils/envValidation';
 
 // Lazy load components for code splitting
 const AssessmentWizard = lazy(() => import('./components/AssessmentWizard'));
@@ -25,19 +23,9 @@ export enum View {
 const App: React.FC = () => {
   const [view, setView] = useState<View>(View.HERO);
   const [answers, setAnswers] = useState<UserAnswers | null>(null);
-  const [envError, setEnvError] = useState<string | null>(null);
 
   // Track page views
   usePageTracking(`/${view.toLowerCase()}`);
-
-  useEffect(() => {
-    if (!isEnvironmentValid()) {
-      setEnvError(
-        'GEMINI_API_KEY is not configured. Please create a .env.local file with your API key.\n' +
-          'See .env.example for reference.'
-      );
-    }
-  }, []);
 
   const startAssessment = () => {
     setView(View.ASSESSMENT);
@@ -49,14 +37,6 @@ const App: React.FC = () => {
   };
 
   const handleAssessmentCancel = () => setView(View.HERO);
-
-  if (envError) {
-    return (
-      <Layout currentView={view} onViewChange={setView}>
-        <ErrorDisplay title="Configuration Error" message={envError} showRetry={false} />
-      </Layout>
-    );
-  }
 
   return (
     <Layout currentView={view} onViewChange={setView}>
