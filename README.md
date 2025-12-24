@@ -158,10 +158,24 @@ The build output will be in the `dist` directory.
 
 ### Deploy to Vercel
 
-1. Push your code to GitHub
-2. Import project in Vercel
-3. Add `GEMINI_API_KEY` environment variable
-4. Deploy
+1. **Push your code to GitHub** (already done ✅)
+
+2. **Import project in Vercel**
+   - Go to https://vercel.com/new
+   - Import your GitHub repository: `JacobKayembekazadi/chimdum`
+   - Vercel will auto-detect Vite configuration
+
+3. **Add Environment Variable** ⚠️ **REQUIRED**
+   - In Vercel project settings, go to **Settings** → **Environment Variables**
+   - Add: `GEMINI_API_KEY` = `AIzaSyAUWC2nvn8-2Pn_92wvN94krs5w-sCTzZY`
+   - Enable for: Production, Preview, and Development
+   - **Important:** Without this, the app will show a configuration error
+
+4. **Deploy**
+   - Click **Deploy** or push a new commit
+   - Vercel will automatically build and deploy
+
+**📖 See [Vercel Deployment Guide](./docs/VERCEL_DEPLOYMENT.md) for detailed instructions.**
 
 ### Deploy to Netlify
 
