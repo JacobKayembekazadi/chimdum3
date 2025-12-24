@@ -66,3 +66,4 @@ export const getUserFriendlyErrorMessage = (error: Error): string => {
 
   return 'Something went wrong. Please try again or contact support if the problem continues.';
 };
+

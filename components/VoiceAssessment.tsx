@@ -116,7 +116,7 @@ TOTAL TIME LIMIT: Keep the entire session under 60 seconds.
               const source = audioContextRef.current!.createMediaStreamSource(stream);
               const scriptProcessor = audioContextRef.current!.createScriptProcessor(4096, 1, 1);
 
-              scriptProcessor.onaudioprocess = e => {
+              scriptProcessor.onaudioprocess = (e: AudioProcessingEvent) => {
                 const inputData = e.inputBuffer.getChannelData(0);
                 const pcmBlob = createBlob(inputData);
                 sessionPromise.then(session => {
@@ -141,9 +141,9 @@ TOTAL TIME LIMIT: Keep the entire session under 60 seconds.
             },
             onmessage: async (message: LiveServerMessage) => {
               // Handle Tool Call
-              if (message.toolCall) {
+              if (message.toolCall?.functionCalls) {
                 for (const fc of message.toolCall.functionCalls) {
-                  if (fc.name === 'completeAssessment') {
+                  if (fc.name === 'completeAssessment' && fc.args) {
                     const text = fc.args.recommendationText as string;
                     setIsRedirecting(true);
                     // Close session and redirect
@@ -154,7 +154,7 @@ TOTAL TIME LIMIT: Keep the entire session under 60 seconds.
               }
 
               // Handle Audio Output
-              const base64Audio = message.serverContent?.modelTurn?.parts[0]?.inlineData?.data;
+              const base64Audio = message.serverContent?.modelTurn?.parts?.[0]?.inlineData?.data;
               if (base64Audio) {
                 setIsSpeaking(true);
                 const ctx = outputAudioContextRef.current!;

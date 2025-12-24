@@ -107,7 +107,7 @@ const ResultsView: React.FC<ResultsViewProps> = ({ answers, preGeneratedContent,
 
         <div className="p-10 md:p-20">
           <div className="prose prose-invert prose-lg max-w-none">
-            {content.split('\n').map((line, i) => {
+            {content.split('\n').map((line: string, i: number) => {
               const upperLine = line.toUpperCase();
 
               if (upperLine.includes('BODY INSIGHT')) {

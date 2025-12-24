@@ -62,6 +62,9 @@ export const useKeyboardNavigation = (options: KeyboardNavigationOptions = {}) =
             onArrowRight();
           }
           break;
+        default:
+          // No action for other keys
+          break;
       }
     },
     [enabled, onEnter, onEscape, onArrowUp, onArrowDown, onArrowLeft, onArrowRight]

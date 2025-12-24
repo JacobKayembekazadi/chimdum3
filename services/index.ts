@@ -4,7 +4,6 @@
 
 // Primary service - Gemini (supports voice)
 export { generateWellnessRecommendation, GeminiServiceError } from './geminiService';
-export type { WellnessRecommendation } from './types';
 
 // Alternative service - DeepSeek (text only, OpenAI-compatible)
 // Note: DeepSeek service is deprecated but kept for reference

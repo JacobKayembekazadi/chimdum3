@@ -40,3 +40,4 @@ You could use Vercel AI SDK for text-based recommendations while keeping Gemini 
 - ✅ Better performance
 
 The Vercel AI SDK warning about Tailwind CSS CDN is unrelated to AI SDK - that's a separate issue we've already fixed.
+

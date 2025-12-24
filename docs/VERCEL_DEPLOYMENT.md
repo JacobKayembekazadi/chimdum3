@@ -85,3 +85,4 @@ After adding the environment variable and redeploying, you can verify it's worki
 - Check that all dependencies are installed correctly
 - Verify that `.npmrc` is configured properly (should have `legacy-peer-deps=true`)
 - Check the build logs in Vercel for specific error messages
+

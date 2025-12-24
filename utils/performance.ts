@@ -51,15 +51,18 @@ export const measureWebVitals = (onPerfEntry?: (metric: WebVitals) => void): voi
     try {
       const observer = new PerformanceObserver(list => {
         const entries = list.getEntries();
-        entries.forEach((entry: PerformanceEventTiming) => {
-          const value = entry.processingStart - entry.startTime;
-          onPerfEntry({
-            name: 'FID',
-            value,
-            delta: value,
-            id: entry.name,
-            rating: value < 100 ? 'good' : value < 300 ? 'needs-improvement' : 'poor',
-          });
+        entries.forEach(entry => {
+          if (entry.entryType === 'first-input' && 'processingStart' in entry) {
+            const fidEntry = entry as PerformanceEventTiming;
+            const value = fidEntry.processingStart - fidEntry.startTime;
+            onPerfEntry({
+              name: 'FID',
+              value,
+              delta: value,
+              id: entry.name,
+              rating: value < 100 ? 'good' : value < 300 ? 'needs-improvement' : 'poor',
+            });
+          }
         });
       });
 
