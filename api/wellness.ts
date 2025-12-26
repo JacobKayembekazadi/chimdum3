@@ -340,12 +340,18 @@ Ensure the recommendation strictly follows the Decision Logic and Output Format 
       stack: process.env.NODE_ENV === 'development' ? error.stack : undefined,
     } : { message: 'Unknown error' };
 
+    // Return more detailed error in response for debugging
+    const errorResponse = {
+      error: 'Unable to generate recommendation',
+      message: errorMessage,
+      // Include details in production too for better debugging (but not stack traces)
+      details: errorDetails,
+    };
+
+    console.error('Returning error response:', JSON.stringify(errorResponse, null, 2));
+
     return new Response(
-      JSON.stringify({
-        error: 'Unable to generate recommendation',
-        message: errorMessage,
-        details: process.env.NODE_ENV === 'development' ? errorDetails : undefined,
-      }),
+      JSON.stringify(errorResponse),
       {
         status: 500,
         headers: { 'Content-Type': 'application/json', ...corsHeaders },
