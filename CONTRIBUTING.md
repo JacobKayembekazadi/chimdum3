@@ -49,3 +49,4 @@ Use conventional commits format:
 ## Questions?
 
 Open an issue or contact the maintainers.
+

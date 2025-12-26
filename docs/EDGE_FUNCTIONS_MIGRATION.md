@@ -147,3 +147,4 @@ GEMINI_API_KEY=your_api_key_here
 - Ensure `.env.local` exists for local development
 - Verify environment variable is set in Vercel dashboard
 - Check variable name is exactly `GEMINI_API_KEY`
+

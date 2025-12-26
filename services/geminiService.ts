@@ -27,17 +27,30 @@ export const generateWellnessRecommendation = async (answers: UserAnswers): Prom
   }
 
   try {
+    // Add timeout to fetch request
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+
     const response = await fetch('/api/wellness', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({ answers }),
-    });
+      signal: controller.signal,
+    }).finally(() => clearTimeout(timeoutId));
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      const errorMessage = errorData.error || `API request failed with status ${response.status}`;
+      const errorMessage = errorData.error || errorData.message || `API request failed with status ${response.status}`;
+      
+      // Provide more specific error messages
+      if (response.status === 500 && errorData.error === 'API key not configured') {
+        throw new GeminiServiceError(
+          'API configuration error. Please ensure GEMINI_API_KEY or DEEPSEEK_API_KEY is set in environment variables.'
+        );
+      }
+      
       throw new Error(errorMessage);
     }
 
@@ -49,6 +62,17 @@ export const generateWellnessRecommendation = async (answers: UserAnswers): Prom
 
     return data.recommendation;
   } catch (error) {
+    // Handle AbortError (timeout)
+    if (error instanceof Error && error.name === 'AbortError') {
+      throw new GeminiServiceError('Request timed out. Please check your internet connection and try again.');
+    }
+    
+    // Handle network errors
+    if (error instanceof TypeError && error.message.includes('fetch')) {
+      throw new GeminiServiceError(
+        'Unable to connect to the wellness guide. The API endpoint may not be available. Please ensure you are running the development server with Vercel CLI (vercel dev) or the API is properly deployed.'
+      );
+    }
     logError(error instanceof Error ? error : new Error(formatApiError(error)), {
       context: 'generateWellnessRecommendation',
       answers,

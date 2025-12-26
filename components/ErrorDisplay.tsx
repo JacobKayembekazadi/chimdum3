@@ -39,9 +39,16 @@ const ErrorDisplay: React.FC<ErrorDisplayProps> = ({
           </div>
 
           <h2 className="text-2xl sm:text-3xl font-bold text-white mb-3 sm:mb-4 px-2">{title}</h2>
-          <p className="text-zinc-400 text-base sm:text-lg leading-relaxed max-w-md mx-auto px-2">
+          <p className="text-zinc-400 text-base sm:text-lg leading-relaxed max-w-md mx-auto px-2 mb-4">
             {message}
           </p>
+          {import.meta.env.DEV && message.toLowerCase().includes('unable to connect') && (
+            <div className="mt-4 p-4 bg-yellow-500/10 border border-yellow-500/30 rounded-sm max-w-md mx-auto">
+              <p className="text-yellow-400 text-sm leading-relaxed">
+                <strong>Development Tip:</strong> The API endpoint requires Vercel CLI. Run <code className="bg-black/30 px-1 py-0.5 rounded">vercel dev</code> instead of <code className="bg-black/30 px-1 py-0.5 rounded">npm run dev</code>, or deploy to Vercel for production use.
+              </p>
+            </div>
+          )}
         </div>
 
         <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">

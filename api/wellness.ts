@@ -3,7 +3,7 @@ import { GoogleGenAI } from '@google/genai';
 import OpenAI from 'openai';
 
 export const config = {
-  runtime: 'edge',
+  runtime: 'nodejs', // Changed from 'edge' to 'nodejs' for better compatibility with AI libraries
 };
 
 // UserAnswers type is inferred from request body
@@ -36,15 +36,27 @@ function detectProvider(): { provider: ApiProvider; apiKey: string } | null {
 }
 
 export default async function handler(req: Request) {
+  // Add CORS headers for development
+  const corsHeaders = {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type',
+  };
+
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { status: 200, headers: corsHeaders });
+  }
+
   if (req.method !== 'POST') {
     return new Response(JSON.stringify({ error: 'Method not allowed' }), {
       status: 405,
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', ...corsHeaders },
     });
   }
 
   try {
     const { answers } = await req.json();
+    console.log('Received request with answers:', JSON.stringify(answers));
 
     if (!answers || typeof answers !== 'object') {
       return new Response(JSON.stringify({ error: 'Invalid request: answers required' }), {
@@ -56,6 +68,11 @@ export default async function handler(req: Request) {
     const providerInfo = detectProvider();
 
     if (!providerInfo) {
+      console.error('No API key found. Available env vars:', {
+        hasDeepSeek: !!process.env.DEEPSEEK_API_KEY,
+        hasGemini: !!process.env.GEMINI_API_KEY,
+        hasGeneric: !!process.env.API_KEY,
+      });
       return new Response(
         JSON.stringify({
           error: 'API key not configured',
@@ -63,12 +80,13 @@ export default async function handler(req: Request) {
         }),
         {
           status: 500,
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json', ...corsHeaders },
         }
       );
     }
 
     const { provider, apiKey } = providerInfo;
+    console.log(`Using provider: ${provider}, API key length: ${apiKey.length}`);
 
     // Questions matching the client-side constants
     const QUESTIONS = [
@@ -239,18 +257,66 @@ Ensure the recommendation strictly follows the Decision Logic and Output Format 
       result = response.choices[0]?.message?.content || '';
     } else {
       // Use Gemini API
-      const ai = new GoogleGenAI({ apiKey });
-      const response = await ai.models.generateContent({
-        model: 'gemini-2.0-flash-exp',
-        contents: prompt,
-        config: {
-          systemInstruction: SYSTEM_PROMPT,
-          temperature: 0.7,
-        },
-      });
+      console.log('Attempting Gemini API call...');
+      try {
+        const ai = new GoogleGenAI({ apiKey });
+        console.log('GoogleGenAI instance created, calling generateContent...');
+        
+        const response = await ai.models.generateContent({
+          model: 'gemini-2.0-flash-exp',
+          contents: prompt,
+          config: {
+            systemInstruction: SYSTEM_PROMPT,
+            temperature: 0.7,
+          },
+        });
 
-      result = response.text;
+        console.log('Gemini API response received');
+        result = response.text || '';
+        
+        if (!result) {
+          console.warn('Gemini returned empty result, trying fallback model...');
+          // Try fallback model
+          const fallbackResponse = await ai.models.generateContent({
+            model: 'gemini-1.5-flash',
+            contents: prompt,
+            config: {
+              systemInstruction: SYSTEM_PROMPT,
+              temperature: 0.7,
+            },
+          });
+          result = fallbackResponse.text || '';
+        }
+      } catch (geminiError) {
+        console.error('Gemini API error:', geminiError);
+        console.error('Error details:', {
+          message: geminiError instanceof Error ? geminiError.message : 'Unknown',
+          name: geminiError instanceof Error ? geminiError.name : 'Unknown',
+          stack: geminiError instanceof Error ? geminiError.stack : 'No stack',
+        });
+        
+        // If Gemini fails, try with a simpler model name
+        try {
+          console.log('Trying fallback model: gemini-1.5-flash');
+          const ai = new GoogleGenAI({ apiKey });
+          const response = await ai.models.generateContent({
+            model: 'gemini-1.5-flash',
+            contents: prompt,
+            config: {
+              systemInstruction: SYSTEM_PROMPT,
+              temperature: 0.7,
+            },
+          });
+          result = response.text || '';
+          console.log('Fallback model succeeded');
+        } catch (fallbackError) {
+          console.error('Gemini fallback error:', fallbackError);
+          throw new Error(`Gemini API error: ${geminiError instanceof Error ? geminiError.message : 'Unknown error'}. Fallback also failed: ${fallbackError instanceof Error ? fallbackError.message : 'Unknown'}`);
+        }
+      }
     }
+    
+    console.log(`API call successful, result length: ${result.length}`);
 
     if (!result || result.trim() === '') {
       return new Response(JSON.stringify({ error: 'Empty response from API' }), {
@@ -261,21 +327,28 @@ Ensure the recommendation strictly follows the Decision Logic and Output Format 
 
     return new Response(JSON.stringify({ recommendation: result }), {
       status: 200,
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', ...corsHeaders },
     });
   } catch (error) {
     console.error('Wellness API error:', error);
+    console.error('Error stack:', error instanceof Error ? error.stack : 'No stack trace');
 
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    const errorDetails = error instanceof Error ? {
+      message: error.message,
+      name: error.name,
+      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined,
+    } : { message: 'Unknown error' };
 
     return new Response(
       JSON.stringify({
         error: 'Unable to generate recommendation',
-        details: process.env.NODE_ENV === 'development' ? errorMessage : undefined,
+        message: errorMessage,
+        details: process.env.NODE_ENV === 'development' ? errorDetails : undefined,
       }),
       {
         status: 500,
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...corsHeaders },
       }
     );
   }

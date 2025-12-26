@@ -9,6 +9,15 @@ export default defineConfig(({ mode }) => {
     server: {
       port: 3000,
       host: '0.0.0.0',
+      proxy: {
+        '/api': {
+          target: 'http://localhost:3000',
+          changeOrigin: true,
+          // For Vercel Edge Functions, we need to handle them differently
+          // In development, if using Vercel CLI, it will handle this
+          // Otherwise, we'll need to set up a local server
+        },
+      },
     },
     plugins: [
       react(),

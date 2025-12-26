@@ -20,3 +20,4 @@ export const useOnlineStatus = (): boolean => {
 
   return isOnline;
 };
+

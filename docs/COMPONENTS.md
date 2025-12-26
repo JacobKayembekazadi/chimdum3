@@ -66,3 +66,4 @@ Main layout component with header, navigation, and footer.
 - `children: ReactNode` - Page content
 - `currentView: View` - Current view state
 - `onViewChange: (view: View) => void` - View change handler
+

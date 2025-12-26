@@ -35,3 +35,4 @@ describe('ErrorBoundary', () => {
     consoleSpy.mockRestore();
   });
 });
+

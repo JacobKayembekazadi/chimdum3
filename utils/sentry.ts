@@ -30,3 +30,4 @@ export const captureMessage = (
   // Sentry.captureMessage(message, level);
   console.log(`[${level.toUpperCase()}]`, message);
 };
+

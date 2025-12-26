@@ -46,21 +46,24 @@ const AssessmentWizard: React.FC<AssessmentWizardProps> = ({ onComplete, onCance
   const progress = ((currentIndex + 1) / QUESTIONS.length) * 100;
 
   return (
-    <div className="max-w-3xl mx-auto py-12 sm:py-16 md:py-20 px-4 sm:px-6">
+    <div className="max-w-4xl mx-auto py-12 sm:py-16 md:py-20 px-4 sm:px-6">
       {currentIndex === 0 && (
-        <div className="mb-10 sm:mb-12 md:mb-16 p-6 sm:p-8 glass-card border-none rounded-none border-l-4 border-[#C5A059] text-center md:text-left">
-          <p className="text-zinc-300 text-base sm:text-lg leading-relaxed font-light italic">
-            &quot;Hi there. I will ask a few simple questions to see how you are feeling. This will
-            help me suggest plant-based support based on Dr. Chimdum&apos;s ideas.&quot;
-          </p>
+        <div className="mb-12 sm:mb-16 md:mb-20 p-8 sm:p-10 md:p-12 glass-card border-l-4 border-[#C5A059] text-center md:text-left animate-fade-in-up">
+          <div className="flex items-start gap-4">
+            <div className="w-1 h-full bg-gradient-to-b from-[#C5A059] to-[#B38B45] flex-shrink-0" />
+            <p className="text-zinc-200 text-lg sm:text-xl md:text-2xl leading-relaxed font-light italic">
+              &quot;Hi there. I will ask a few simple questions to see how you are feeling. This will
+              help me suggest plant-based support based on Dr. Chimdum&apos;s ideas.&quot;
+            </p>
+          </div>
         </div>
       )}
 
-      <div className="mb-8 sm:mb-10 md:mb-12">
-        <div className="flex justify-between items-end mb-4 sm:mb-6">
+      <div className="mb-10 sm:mb-12 md:mb-16">
+        <div className="flex justify-between items-end mb-5 sm:mb-6">
           <button
             onClick={handleBack}
-            className="text-zinc-500 hover:text-[#C5A059] transition-all text-[9px] sm:text-[10px] font-bold uppercase tracking-[0.2em] focus:outline-none focus:ring-2 focus:ring-[#C5A059] focus:ring-offset-2 focus:ring-offset-black rounded px-2 py-1"
+            className="text-zinc-400 hover:text-[#C5A059] transition-all text-[10px] sm:text-[11px] font-semibold uppercase tracking-[0.2em] focus:outline-none focus:ring-2 focus:ring-[#C5A059] focus:ring-offset-2 focus:ring-offset-black rounded px-3 py-1.5 hover:bg-white/5"
             aria-label={
               currentIndex > 0 ? `Go back to question ${currentIndex}` : 'Cancel assessment'
             }
@@ -68,26 +71,27 @@ const AssessmentWizard: React.FC<AssessmentWizardProps> = ({ onComplete, onCance
             ← Back
           </button>
           <div className="text-right">
-            <span className="text-[#C5A059] text-[9px] sm:text-[10px] font-bold uppercase tracking-[0.3em]">
-              Step {currentIndex + 1}
+            <span className="text-[#C5A059] text-[10px] sm:text-[11px] font-bold uppercase tracking-[0.3em]">
+              Step {currentIndex + 1} of {QUESTIONS.length}
             </span>
           </div>
         </div>
-        <div className="h-[2px] w-full bg-zinc-900 overflow-hidden">
+        <div className="h-[3px] w-full bg-zinc-900 overflow-hidden rounded-full">
           <div
-            className="h-full bg-[#C5A059] transition-all duration-700 ease-in-out"
+            className="h-full bg-gradient-to-r from-[#C5A059] to-[#B38B45] transition-all duration-700 ease-out shadow-[0_0_10px_rgba(197,160,89,0.5)]"
             style={{ width: `${progress}%` }}
           />
         </div>
       </div>
 
-      <div className="glass-card rounded-none p-6 sm:p-8 md:p-10 lg:p-16 relative overflow-hidden">
-        {/* Decorative corner */}
-        <div className="absolute top-0 right-0 w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 border-t-2 border-r-2 border-[#C5A059]/20" />
+      <div className="glass-card p-8 sm:p-10 md:p-12 lg:p-16 relative overflow-hidden animate-fade-in-up">
+        {/* Enhanced decorative elements */}
+        <div className="absolute top-0 right-0 w-20 h-20 sm:w-24 sm:h-24 md:w-32 md:h-32 border-t-2 border-r-2 border-[#C5A059]/20" />
+        <div className="absolute bottom-0 left-0 w-16 h-16 sm:w-20 sm:h-20 border-b-2 border-l-2 border-[#C5A059]/10" />
 
         <h2
           id="question-text"
-          className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-8 sm:mb-10 md:mb-14 leading-tight"
+          className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-10 sm:mb-12 md:mb-16 leading-tight"
         >
           {currentQuestion.text}
         </h2>
@@ -96,33 +100,55 @@ const AssessmentWizard: React.FC<AssessmentWizardProps> = ({ onComplete, onCance
         </div>
 
         <div
-          className="grid grid-cols-1 gap-4 sm:gap-5 md:gap-6"
+          className="grid grid-cols-1 gap-5 sm:gap-6 md:gap-7"
           role="radiogroup"
           aria-labelledby="question-text"
         >
-          {currentQuestion.options.map(option => (
+          {currentQuestion.options.map((option, idx) => (
             <button
               key={option.value}
               onClick={() => handleSelect(option.value)}
-              className="w-full text-left p-5 sm:p-6 md:p-8 border border-white/5 hover:border-[#C5A059]/50 hover:bg-white/5 transition-all group flex justify-between items-center focus:outline-none focus:ring-2 focus:ring-[#C5A059] focus:ring-offset-2 focus:ring-offset-black"
+              className={`w-full text-left p-6 sm:p-7 md:p-8 border transition-all duration-300 group flex justify-between items-center focus:outline-none focus:ring-2 focus:ring-[#C5A059] focus:ring-offset-2 focus:ring-offset-black relative overflow-hidden ${
+                answers[currentQuestion.id] === option.value
+                  ? 'border-[#C5A059] bg-[#C5A059]/10 shadow-[0_0_20px_rgba(197,160,89,0.2)]'
+                  : 'border-white/[0.08] hover:border-[#C5A059]/50 hover:bg-white/[0.03]'
+              }`}
               role="radio"
               aria-checked={answers[currentQuestion.id] === option.value}
               aria-label={`${currentQuestion.text}: ${option.label}`}
               tabIndex={answers[currentQuestion.id] === option.value ? 0 : -1}
+              style={{ animationDelay: `${idx * 0.05}s` }}
             >
-              <span className="text-lg sm:text-xl text-zinc-400 group-hover:text-white transition-colors font-light pr-4">
+              {/* Hover effect background */}
+              <div className="absolute inset-0 bg-gradient-to-r from-[#C5A059]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+              
+              <span className={`text-xl sm:text-2xl relative z-10 transition-colors font-light pr-4 ${
+                answers[currentQuestion.id] === option.value
+                  ? 'text-white'
+                  : 'text-zinc-400 group-hover:text-white'
+              }`}>
                 {option.label}
               </span>
               <div
-                className="w-4 h-4 rounded-full border border-zinc-700 group-hover:border-[#C5A059] transition-colors flex-shrink-0"
+                className={`w-5 h-5 rounded-full border-2 flex-shrink-0 relative z-10 transition-all duration-300 ${
+                  answers[currentQuestion.id] === option.value
+                    ? 'border-[#C5A059] bg-[#C5A059] shadow-[0_0_12px_rgba(197,160,89,0.6)]'
+                    : 'border-zinc-600 group-hover:border-[#C5A059]'
+                }`}
                 aria-hidden="true"
-              />
+              >
+                {answers[currentQuestion.id] === option.value && (
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="w-2 h-2 bg-black rounded-full" />
+                  </div>
+                )}
+              </div>
             </button>
           ))}
         </div>
       </div>
 
-      <p className="mt-8 sm:mt-10 md:mt-12 text-center text-zinc-600 text-[9px] sm:text-[10px] uppercase tracking-[0.4em]">
+      <p className="mt-10 sm:mt-12 md:mt-16 text-center text-zinc-500 text-[10px] sm:text-[11px] uppercase tracking-[0.4em]">
         Chimdum Wellness Guide
       </p>
     </div>

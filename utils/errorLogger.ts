@@ -48,7 +48,16 @@ export const logReactError = (error: Error, errorInfo: { componentStack?: string
 export const getUserFriendlyErrorMessage = (error: Error): string => {
   const message = error.message.toLowerCase();
 
+  // Check for specific API configuration errors first
+  if (message.includes('api key not configured') || message.includes('api configuration error')) {
+    return 'API configuration error. Please ensure the API key is properly set in environment variables.';
+  }
+
   if (message.includes('api') || message.includes('network') || message.includes('fetch')) {
+    // Check if it's a development environment issue
+    if (message.includes('vercel') || message.includes('endpoint may not be available')) {
+      return error.message; // Return the more specific message
+    }
     return 'Unable to connect to the wellness guide. Please check your internet connection and try again.';
   }
 
@@ -66,3 +75,4 @@ export const getUserFriendlyErrorMessage = (error: Error): string => {
 
   return 'Something went wrong. Please try again or contact support if the problem continues.';
 };
+

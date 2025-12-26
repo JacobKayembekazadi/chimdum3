@@ -62,3 +62,4 @@ export const validateAnswersStructure = (answers: UserAnswers): boolean => {
   // Check that all answers are strings
   return Object.values(answers).every(value => typeof value === 'string' && value.trim() !== '');
 };
+
