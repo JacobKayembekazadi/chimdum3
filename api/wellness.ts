@@ -242,31 +242,56 @@ Ensure the recommendation strictly follows the Decision Logic and Output Format 
     if (provider === 'deepseek') {
       // Use DeepSeek API (OpenAI-compatible)
       console.log('Creating DeepSeek client...');
-      const client = new OpenAI({
-        apiKey,
-        baseURL: 'https://api.deepseek.com',
-        timeout: 55000, // 55 second timeout (slightly less than 60s fetch timeout)
-      });
+      try {
+        const client = new OpenAI({
+          apiKey,
+          baseURL: 'https://api.deepseek.com',
+          timeout: 55000, // 55 second timeout (slightly less than 60s fetch timeout)
+        });
 
-      console.log('Calling DeepSeek API...');
-      const response = await client.chat.completions.create({
-        model: 'deepseek-chat',
-        messages: [
-          {
-            role: 'system',
-            content: SYSTEM_PROMPT,
-          },
-          {
-            role: 'user',
-            content: prompt,
-          },
-        ],
-        temperature: 0.7,
-        max_tokens: 2000,
-      });
+        console.log('Calling DeepSeek API with model: deepseek-chat');
+        console.log('Prompt length:', prompt.length);
+        console.log('System prompt length:', SYSTEM_PROMPT.length);
+        
+        const startTime = Date.now();
+        const response = await client.chat.completions.create({
+          model: 'deepseek-chat',
+          messages: [
+            {
+              role: 'system',
+              content: SYSTEM_PROMPT,
+            },
+            {
+              role: 'user',
+              content: prompt,
+            },
+          ],
+          temperature: 0.7,
+          max_tokens: 2000,
+        });
 
-      console.log('DeepSeek API response received');
-      result = response.choices[0]?.message?.content || '';
+        const duration = Date.now() - startTime;
+        console.log(`DeepSeek API response received in ${duration}ms`);
+        
+        result = response.choices[0]?.message?.content || '';
+        
+        if (!result) {
+          console.error('DeepSeek returned empty result. Response:', JSON.stringify(response, null, 2));
+          throw new Error('DeepSeek API returned empty response');
+        }
+        
+        console.log(`DeepSeek result length: ${result.length} characters`);
+      } catch (deepseekError) {
+        console.error('DeepSeek API call failed:', deepseekError);
+        console.error('Error type:', deepseekError instanceof Error ? deepseekError.constructor.name : typeof deepseekError);
+        console.error('Error message:', deepseekError instanceof Error ? deepseekError.message : String(deepseekError));
+        
+        if (deepseekError instanceof Error) {
+          // Re-throw with more context
+          throw new Error(`DeepSeek API error: ${deepseekError.message}. Check API key and network connection.`);
+        }
+        throw deepseekError;
+      }
     } else {
       // Use Gemini API
       console.log('Attempting Gemini API call...');
