@@ -44,33 +44,31 @@ function detectProvider(): { provider: ApiProvider; apiKey: string } | null {
 }
 
 /**
- * Wraps an async operation with a timeout using AbortController
+ * Wraps an async operation with a timeout using Promise.race
+ * This ensures the promise is rejected if it takes too long
+ * Note: This doesn't cancel the underlying operation, but prevents the caller from waiting indefinitely
  */
 async function withTimeout<T>(
   promise: Promise<T>,
   timeoutMs: number,
   errorMessage: string
 ): Promise<T> {
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => {
-    console.error(`Operation timed out after ${timeoutMs}ms: ${errorMessage}`);
-    controller.abort();
-  }, timeoutMs);
+  let timeoutId: NodeJS.Timeout;
+  
+  const timeoutPromise = new Promise<never>((_, reject) => {
+    timeoutId = setTimeout(() => {
+      console.error(`Operation timed out after ${timeoutMs}ms: ${errorMessage}`);
+      reject(new Error(`Timeout: ${errorMessage} (${timeoutMs}ms)`));
+    }, timeoutMs);
+  });
 
   try {
-    // Create a timeout promise that rejects when aborted
-    const timeoutPromise = new Promise<never>((_, reject) => {
-      controller.signal.addEventListener('abort', () => {
-        reject(new Error(`Timeout: ${errorMessage}`));
-      });
-    });
-
     // Race between the actual promise and timeout
     const result = await Promise.race([promise, timeoutPromise]);
-    clearTimeout(timeoutId);
+    clearTimeout(timeoutId!);
     return result;
   } catch (error) {
-    clearTimeout(timeoutId);
+    clearTimeout(timeoutId!);
     throw error;
   }
 }
@@ -92,7 +90,7 @@ async function callDeepSeekAPI(
   console.log('Calling DeepSeek API with model: deepseek-chat');
   const startTime = Date.now();
 
-  // Wrap the API call with a 45-second timeout
+  // Wrap the API call with a 50-second timeout (leaves 10s buffer for client 60s timeout)
   const response = await withTimeout(
     client.chat.completions.create({
       model: 'deepseek-chat',
@@ -109,7 +107,7 @@ async function callDeepSeekAPI(
       temperature: 0.7,
       max_tokens: 2000,
     }),
-    45000, // 45 second timeout (leaves buffer for response processing)
+    50000, // 50 second timeout (leaves 10s buffer for client 60s timeout)
     'DeepSeek API call'
   );
 
@@ -140,7 +138,7 @@ async function callGeminiAPI(
   console.log('Calling Gemini API with model: gemini-2.0-flash-exp');
   const startTime = Date.now();
 
-  // Wrap the API call with a 45-second timeout
+  // Wrap the API call with a 50-second timeout (leaves 10s buffer for client 60s timeout)
   const response = await withTimeout(
     ai.models.generateContent({
       model: 'gemini-2.0-flash-exp',
@@ -150,7 +148,7 @@ async function callGeminiAPI(
         temperature: 0.7,
       },
     }),
-    45000, // 45 second timeout
+    50000, // 50 second timeout (leaves 10s buffer for client 60s timeout)
     'Gemini API call'
   );
 
@@ -159,23 +157,23 @@ async function callGeminiAPI(
 
   let result = response.text || '';
 
-  // Try fallback model if empty
-  if (!result) {
-    console.warn('Gemini returned empty result, trying fallback model: gemini-1.5-flash');
-    const fallbackResponse = await withTimeout(
-      ai.models.generateContent({
-        model: 'gemini-1.5-flash',
-        contents: userPrompt,
-        config: {
-          systemInstruction: systemPrompt,
-          temperature: 0.7,
-        },
-      }),
-      45000,
-      'Gemini fallback API call'
-    );
-    result = fallbackResponse.text || '';
-  }
+    // Try fallback model if empty
+    if (!result) {
+      console.warn('Gemini returned empty result, trying fallback model: gemini-1.5-flash');
+      const fallbackResponse = await withTimeout(
+        ai.models.generateContent({
+          model: 'gemini-1.5-flash',
+          contents: userPrompt,
+          config: {
+            systemInstruction: systemPrompt,
+            temperature: 0.7,
+          },
+        }),
+        50000, // 50 second timeout
+        'Gemini fallback API call'
+      );
+      result = fallbackResponse.text || '';
+    }
 
   if (!result) {
     throw new Error('Gemini API returned empty response');
