@@ -11,27 +11,35 @@ export const config = {
 type ApiProvider = 'gemini' | 'deepseek';
 
 function detectProvider(): { provider: ApiProvider; apiKey: string } | null {
-  // Check for DeepSeek first (starts with 'sk-')
+  // PRIORITY 1: Check for DeepSeek API key explicitly set
   const deepseekKey = process.env.DEEPSEEK_API_KEY;
-  if (deepseekKey && deepseekKey.trim() !== '' && deepseekKey.startsWith('sk-')) {
-    return { provider: 'deepseek', apiKey: deepseekKey };
+  if (deepseekKey && deepseekKey.trim() !== '') {
+    // DeepSeek keys should start with 'sk-', but accept any non-empty value if explicitly set
+    console.log('Using DEEPSEEK_API_KEY (explicitly set)');
+    return { provider: 'deepseek', apiKey: deepseekKey.trim() };
   }
 
-  // Check for Gemini
+  // PRIORITY 2: Check for generic API_KEY that looks like DeepSeek (starts with 'sk-')
+  const genericKey = process.env.API_KEY;
+  if (genericKey && genericKey.trim() !== '' && genericKey.startsWith('sk-')) {
+    console.log('Using API_KEY as DeepSeek (starts with sk-)');
+    return { provider: 'deepseek', apiKey: genericKey.trim() };
+  }
+
+  // PRIORITY 3: Check for Gemini API key
   const geminiKey = process.env.GEMINI_API_KEY;
   if (geminiKey && geminiKey.trim() !== '') {
-    return { provider: 'gemini', apiKey: geminiKey };
+    console.log('Using GEMINI_API_KEY');
+    return { provider: 'gemini', apiKey: geminiKey.trim() };
   }
 
-  // Fallback to generic API_KEY (treat as DeepSeek if starts with 'sk-', otherwise Gemini)
-  const genericKey = process.env.API_KEY;
+  // PRIORITY 4: Fallback to generic API_KEY as Gemini
   if (genericKey && genericKey.trim() !== '') {
-    if (genericKey.startsWith('sk-')) {
-      return { provider: 'deepseek', apiKey: genericKey };
-    }
-    return { provider: 'gemini', apiKey: genericKey };
+    console.log('Using API_KEY as Gemini (fallback)');
+    return { provider: 'gemini', apiKey: genericKey.trim() };
   }
 
+  console.error('No API key found in environment variables');
   return null;
 }
 
