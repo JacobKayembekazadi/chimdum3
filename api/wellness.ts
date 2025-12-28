@@ -245,26 +245,35 @@ export default async function handler(req: Request): Promise<Response> {
 
   // GET request returns debug info (for testing deployment)
   if (req.method === 'GET') {
-    const providerInfo = detectProvider();
-    return new Response(
-      JSON.stringify(
-        {
-          status: 'ok',
-          message: 'Wellness API is running',
-          debug: {
-            ...debugInfo,
-            providerDetected: providerInfo ? providerInfo.provider : 'none',
-            apiKeyConfigured: !!providerInfo,
-          },
-        },
-        null,
-        2
-      ),
-      {
+    try {
+      console.log('GET request - detecting provider...');
+      const providerInfo = detectProvider();
+      console.log('Provider detected, building response...');
+
+      const responseData = {
+        status: 'ok',
+        message: 'Wellness API is running',
+        provider: providerInfo ? providerInfo.provider : 'none',
+        hasApiKey: !!providerInfo,
+        timestamp: new Date().toISOString(),
+      };
+
+      console.log('Sending response:', JSON.stringify(responseData));
+
+      return new Response(JSON.stringify(responseData), {
         status: 200,
         headers: corsHeaders,
-      }
-    );
+      });
+    } catch (error) {
+      console.error('GET handler error:', error);
+      return new Response(
+        JSON.stringify({ error: 'Failed to process GET request', message: String(error) }),
+        {
+          status: 500,
+          headers: corsHeaders,
+        }
+      );
+    }
   }
 
   // Only allow POST for actual recommendations
